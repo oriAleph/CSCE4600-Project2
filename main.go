@@ -9,7 +9,7 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/oriAleph/CSCE4600-Project2/Project2/builtins"
+	"github.com/oriAleph/CSCE4600-Project2/builtins"
 )
 
 func main() {
