@@ -17,9 +17,12 @@ var (
 	aliasOptions     = "\nFor list of options: alias help\n"
 	aliasOptionsList = []string{"Print alias: alias -p [name]", "Remove alias: alias -r [name]",
 		"Print all aliases: alias -p", "Remove all aliases: alias -ra", aliasFormat}
+	aliasList []AliasPair
+	alias     []string   //transfer values over since you can't pass structs
+	original  [][]string //transfer values over since you can't pass structs
 )
 
-func Alias(aliasList []AliasPair, args ...string) error {
+func Alias(args ...string) ([]string, [][]string, error) {
 
 	argsSize := len(args)
 	aliasSize := len(aliasList)
@@ -29,7 +32,7 @@ func Alias(aliasList []AliasPair, args ...string) error {
 	// Zero arguments
 	case 0:
 		fmt.Print(aliasFormat, aliasOptions)
-		return nil
+		return alias, original, nil
 
 	// Check for one argument options
 	case 1:
@@ -39,7 +42,7 @@ func Alias(aliasList []AliasPair, args ...string) error {
 				fmt.Printf("%s\n", h)
 			}
 			fmt.Print(aliasFormat)
-			return nil
+			return alias, original, nil
 
 		} else if args[0] == "-p" { // Print all aliases
 			if aliasSize == 0 {
@@ -50,16 +53,18 @@ func Alias(aliasList []AliasPair, args ...string) error {
 					fmt.Printf("%s = %s\n", p.alias, p.original)
 				}
 			}
-			return nil
+			return alias, original, nil
 
 		} else if args[0] == "-ra" { // Remove all aliases
 			if aliasSize == 0 {
 				fmt.Print("\nAlias list empty.\n")
 			} else {
 				aliasList = nil
+				alias = nil
+				original = nil
 				fmt.Print("\nAll aliases removed.\n")
 			}
-			return nil
+			return alias, original, nil
 
 		}
 	}
@@ -69,21 +74,24 @@ func Alias(aliasList []AliasPair, args ...string) error {
 		for _, p := range aliasList {
 			if p.alias == args[1] {
 				fmt.Printf("\n%s=%s\n", p.alias, p.original)
-				return nil
+				return alias, original, nil
 			}
 		}
-		return fmt.Errorf("%w: alias not found", ErrInvalidArg)
+		return alias, original, fmt.Errorf("%w: alias not found", ErrInvalidArg)
 
 	} else if args[0] == "-r" { // Remove alias
 		fmt.Print("\nDeleting alias...\n")
 		for i, r := range aliasList {
 			if r.alias == args[1] {
 				aliasList = append(aliasList[:i], aliasList[i+1:]...)
+				alias = append(alias[:i], alias[i+1:]...)
+				original = append(original[:i], original[i+1:]...)
+
 				fmt.Printf("Alias deleted.\n")
-				return nil
+				return alias, original, nil
 			}
 		}
-		return fmt.Errorf("%w: alias not found", ErrInvalidArg)
+		return alias, original, fmt.Errorf("%w: alias not found", ErrInvalidArg)
 
 	}
 
@@ -109,17 +117,20 @@ func Alias(aliasList []AliasPair, args ...string) error {
 			// Add alias pair to list
 			aliasList = append(aliasList, AliasPair{alias: args[0], original: args[1:]})
 			aliasSize = len(aliasList) //  new alias list size
+			alias = append(alias, aliasList[aliasSize-1].alias)
+			original = append(original, aliasList[aliasSize-1].original)
+
 			fmt.Printf("\nAdded alias: %s, original: %s\n", aliasList[aliasSize-1].alias, aliasList[aliasSize-1].original)
-			return nil
+			return alias, original, nil
 
 		}
 
 	} else {
 		fmt.Print(aliasFormat, aliasOptions)
-		return fmt.Errorf("%w: improper format", ErrInvalidArg)
+		return alias, original, fmt.Errorf("%w: improper format", ErrInvalidArg)
 
 	}
 
 	fmt.Print(aliasFormat, aliasOptions)
-	return fmt.Errorf("%w: logical error", ErrInvalidArg)
+	return alias, original, fmt.Errorf("%w: logical error", ErrInvalidArg)
 }
