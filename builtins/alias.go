@@ -98,7 +98,6 @@ func Alias(args ...string) ([]string, [][]string, error) {
 	// Clean up arguments and append new alias
 	// Format: alias [option] [name]='[value]'
 	// Example: alias la='ls -a'
-	// name, args := args[0], args[1:]
 	if strings.Contains(args[0], "='") && strings.HasSuffix(args[argsSize-1], "'") {
 
 		// Remove =' from first argument by splitting it
@@ -106,16 +105,17 @@ func Alias(args ...string) ([]string, [][]string, error) {
 
 		if len(split) == 2 { // Just two from before and after ='
 
-			args[0] = split[0]
-
 			// Remove last single quote
 			args[argsSize-1] = strings.TrimSuffix(args[argsSize-1], "'")
 
 			// Combine arguments for full original command
-			args = append(split[1:], args...)
+			var result []string
+			result = append(result, split[0])    // adding alias command
+			result = append(result, split[1])    // adding original command
+			result = append(result, args[1:]...) // adding rest of original command
 
 			// Add alias pair to list
-			aliasList = append(aliasList, AliasPair{alias: args[0], original: args[1:]})
+			aliasList = append(aliasList, AliasPair{alias: result[0], original: result[1:]})
 			aliasSize = len(aliasList) //  new alias list size
 			alias = append(alias, aliasList[aliasSize-1].alias)
 			original = append(original, aliasList[aliasSize-1].original)
