@@ -17,10 +17,9 @@ var (
 	aliasOptions     = "\nFor list of options: alias help\n"
 	aliasOptionsList = []string{"Print alias: alias -p [name]", "Remove alias: alias -r [name]",
 		"Print all aliases: alias -p", "Remove all aliases: alias -ra", aliasFormat}
-	aliasList []AliasPair
 )
 
-func Alias(args ...string) error {
+func Alias(aliasList []AliasPair, args ...string) error {
 
 	argsSize := len(args)
 	aliasSize := len(aliasList)
