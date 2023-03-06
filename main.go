@@ -12,6 +12,19 @@ import (
 	"github.com/oriAleph/CSCE4600-Project2/builtins"
 )
 
+type (
+	Builtin struct {
+		command  string
+		function error
+	}
+	AliasPair struct {
+		alias    string
+		original []string
+	}
+)
+
+var aliasList []AliasPair
+
 func main() {
 	exit := make(chan struct{}, 2) // buffer this so there's no deadlock.
 	runLoop(os.Stdin, os.Stdout, os.Stderr, exit)
@@ -71,16 +84,30 @@ func handleInput(w io.Writer, input string, exit chan<- struct{}) error {
 	args := strings.Split(input, " ")
 	name, args := args[0], args[1:]
 
-	// Check for built-in commands.
-	// New builtin commands should be added here. Eventually this should be refactored to its own func.
-	switch name {
-	case "cd":
-		return builtins.ChangeDirectory(args...)
-	case "env":
-		return builtins.EnvironmentVariables(w, args...)
-	case "exit":
+	// Fill in builtin command list
+	// New builtin commands should be added here
+	var builtinList = []Builtin{
+		{command: "cd", function: builtins.ChangeDirectory(args...)},
+		{command: "env", function: builtins.EnvironmentVariables(w, args...)},
+		{command: "alias", function: builtins.Alias(aliasList, args...)},
+	}
+
+	// Check for built-in commands
+	if name == "exit" {
 		exit <- struct{}{}
 		return nil
+	}
+	for _, b := range builtinList {
+		if name == b.command {
+			return b.function
+		}
+	}
+
+	// Check for alias commamds
+	for _, a := range aliasList {
+		if name == a.alias {
+			return executeCommand(a.original[0], a.original[1:]...)
+		}
 	}
 
 	return executeCommand(name, args...)
