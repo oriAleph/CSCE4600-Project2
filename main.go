@@ -93,6 +93,8 @@ func handleInput(w io.Writer, input string, exit chan<- struct{}) error {
 		return builtins.SH(args...)
 	case "echo":
 		return builtins.RepeatStuffs(args...)
+	case "mkdir":
+		return builtins.mkdir(args...)
 	case "exit":
 		exit <- struct{}{}
 		return nil
